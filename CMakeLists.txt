@@ -31,8 +31,8 @@ target_compile_definitions(gl2vid PUBLIC ${gl2vid_DEFINITIONS})
 
 if(NOT TARGET glad)
     add_library(glad ${CMAKE_CURRENT_LIST_DIR}/glad/glad.c)
-    target_link_libraries(gl2vid PRIVATE glad)
 endif()
+target_link_libraries(gl2vid PRIVATE glad)
 
 find_package(glfw3 CONFIG REQUIRED)
 target_include_directories(gl2vid PRIVATE ${GLFW_INCLUDE_DIR})
