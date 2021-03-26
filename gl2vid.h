@@ -45,14 +45,14 @@ typedef struct g2v_context g2v_context;
  * 
  * @return pointer to gl2vid context, which may be NULL if failed
  */
-g2v_context* g2v_create_context();
+int g2v_create_context();
 
 /**
  * @brief Deinit a initialized gl2vid context.
  * 
  * @param ctx pointer to already created gl2vid context
  */
-void g2v_free_context(g2v_context* ctx);
+void g2v_free_context();
 
 #define G2V_TARGETS 2
 #define G2V_TARGET_RENDERBUFFER
@@ -139,7 +139,7 @@ struct g2v_encoder {
      * @brief Encode function, depends on the encoder type
      * 
      */
-    int(*encode_fn)(g2v_render_ctx*, void*);
+    int(*encode_fn)(g2v_render_ctx*, struct g2v_encoder*);
 
     /**
      * @brief User callback to render video frames.
@@ -174,6 +174,26 @@ typedef struct g2v_encoder g2v_encoder;
  * @return G2V_TRUE if success, G2V_FALSE otherwise
  */
 int g2v_encode(g2v_encoder* encoder, g2v_render_ctx* render_ctx);
+
+/**
+ * @brief Create a dummy video encoder, which doesn't actually encode, but show the internal gl2vid window (for OpenGL context) and update it (using glfwPollEvents() and glfwSwapBuffers()) every frame rendered
+ * This function is used to help debugging OpenGL on gl2vid without changing the source code too much.
+ * 
+ * Note: One GLFW encoder may be used at any time
+ * 
+ * @param enc pointer to allocated gl2vid video encoder
+ * @param ctx pointer to initialized gl2vid render context
+ * @return int G2V_TRUE if success, G2V_FALSE otherwise
+ */
+int g2v_create_glfw_encoder(g2v_encoder* enc, g2v_render_ctx* ctx);
+
+/**
+ * @brief Restore the default behaviour of gl2vid after calling g2v_create_glfw_encoder()
+ * 
+ * @param enc pointer to initialized dummy GLFW video encoder
+ * @return G2V_TRUE if success, G2V_FALSE otherwise 
+ */
+int g2v_finish_glfw_encoder(g2v_encoder* enc);
 
 #ifdef G2V_USE_FFMPEG_ENCODER
 

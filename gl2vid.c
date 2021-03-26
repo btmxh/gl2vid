@@ -21,7 +21,7 @@ void print_memory(char* ptr, size_t bytes) {
 
 struct g2v_context {
     GLFWwindow* window;
-};
+} g2v;
 
 char g2v_error_log[256] = { 0 };
 void err_printf(const char* fmt, ...) {
@@ -41,32 +41,32 @@ const char* get_glfw_error() {
     return err;
 }
 
-g2v_context* g2v_create_context() {
+int g2v_create_context() {
     if(!glfwInit()) {
         err_printf("GLFW error: %s", get_glfw_error());
-        return NULL;
+        return G2V_FALSE;
     }
     glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
     GLFWwindow* window = glfwCreateWindow(50, 50, "", NULL, NULL);
     if(!window) {
         err_printf("GLFW window creation error: %s", get_glfw_error());
         glfwTerminate();
-        return NULL;
+        return G2V_FALSE;
     }
     glfwMakeContextCurrent(window);
     if(!gladLoadGL()) {
         err_printf("GLAD initialization error.");
         glfwDestroyWindow(window);
         glfwTerminate();
+        return G2V_FALSE;
     }
-    g2v_context* ctx = malloc(sizeof* ctx);
-    ctx->window = window;
-    return ctx;
+    g2v.window = window;
+    return G2V_TRUE;
 }
 
-void g2v_free_context(g2v_context* ctx) {
-    if(!ctx)    return;
-    glfwDestroyWindow(ctx->window);
+void g2v_free_context() {
+    if(!g2v.window)    return;
+    glfwDestroyWindow(g2v.window);
     glfwTerminate();
 }
 
@@ -151,6 +151,32 @@ int g2v_encode(g2v_encoder* encoder, g2v_render_ctx* ctx) {
     return encoder->encode_fn(ctx, encoder);
 }
 
+int glfw_encode(g2v_render_ctx* ctx, g2v_encoder* encoder) {
+    while(!glfwWindowShouldClose(g2v.window)) {
+        glfwPollEvents();
+
+        prepare_gl_state(ctx);
+        int eof = encoder->render_video_frame(ctx, encoder->user_ptr);
+        read_gl_data(ctx);
+        glfwSwapBuffers(g2v.window);
+        if(eof) {
+            break;
+        }
+    }
+    return G2V_TRUE;
+}
+
+int g2v_create_glfw_encoder(g2v_encoder* enc, g2v_render_ctx* ctx) {
+    glfwShowWindow(g2v.window);
+    enc->encode_fn = glfw_encode;
+    return G2V_TRUE;
+}
+
+int g2v_finish_glfw_encoder(g2v_encoder* enc) {
+    glfwHideWindow(g2v.window);
+    return G2V_TRUE;
+}
+
 #ifdef G2V_USE_FFMPEG_ENCODER
 
 #include "libavcodec/avcodec.h"
@@ -226,7 +252,7 @@ int ffmpeg_encode(g2v_render_ctx* ctx, g2v_encoder* encoder) {
             } else {
                 read_gl_data(ctx);
                 int in_linesize[1] = { 4 * ctx->width };
-                sws_scale(fi->sws_ctx, &ctx->pix_data, in_linesize, 0, ctx->height, fi->video.frame->data, fi->video.frame->linesize);
+                sws_scale(fi->sws_ctx, (uint8_t**)&ctx->pix_data, in_linesize, 0, ctx->height, fi->video.frame->data, fi->video.frame->linesize);
             }
             int ret = ffmpeg_write_frame(fi, &fi->video);
             if(ret == G2V_FALSE) {
