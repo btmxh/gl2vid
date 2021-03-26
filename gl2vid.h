@@ -145,13 +145,13 @@ struct g2v_encoder {
      * @brief User callback to render video frames.
      * 
      */
-    int(*render_video_frame)(g2v_render_ctx*, struct g2v_encoder*);
+    int(*render_video_frame)(g2v_render_ctx*, void*);
 
     /**
      * @brief User callback to render audio frames.
      * 
      */
-    int(*render_audio_frame)(g2v_render_ctx*, struct g2v_encoder*);
+    int(*render_audio_frame)(g2v_render_ctx*, void*);
 
     /**
      * @brief User pointer.

@@ -92,7 +92,7 @@ int g2v_init_render_ctx(g2v_render_ctx* ctx, int width, int height) {
         glFramebufferRenderbuffer(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, ctx->renderbuffers[i]);
 #else
         glBindTexture(GL_TEXTURE_2D, ctx->textures[i]);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, ctx->textures[i], 0);
@@ -128,7 +128,7 @@ void read_gl_data(g2v_render_ctx* ctx) {
     glBindBuffer(GL_PIXEL_PACK_BUFFER, ctx->pbos[read_pbo_idx]);
     // glBindBuffer(GL_PIXEL_PACK_BUFFER, 0);
     // int* buffer_content = malloc(ctx->width * ctx->height * sizeof(int));
-    glReadPixels(0, 0, ctx->width, ctx->height, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+    glReadPixels(0, 0, ctx->width, ctx->height, GL_BGRA, GL_UNSIGNED_BYTE, 0);
 
     glBindBuffer(GL_PIXEL_PACK_BUFFER, ctx->pbos[proc_pbo_idx]);
     int* buffer_content = glMapBuffer(GL_PIXEL_PACK_BUFFER, GL_READ_ONLY);
